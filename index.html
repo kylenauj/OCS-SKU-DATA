@@ -530,6 +530,12 @@ function renderCard(p){
   else if(nncpMax!=null) nncpRange=nncpMax+'%';
   else if(nncpMin!=null) nncpRange=nncpMin+'%';
   var nncpId=(nncp&&nncp['NNCP ID'])||'';
+  // Case configuration comes from the OCS item export ONLY. The NNCP workbook's
+  // 'Summer Launch' tab also carries a Master Case Size, but it is a Mar-2025
+  // launch-planning figure and is stale (it says 12/case for Pink Gas Shatter
+  // and Electric Grapefruit Shatter, which OCS now lists at 6). Never import it.
+  var caseUnit=(m['Case Unit']!=null)?m['Case Unit']:null;
+  var innerUnit=(m['Inner Pack Unit']!=null)?m['Inner Pack Unit']:null;
   var hasBarcodes=eBC||iBC||cBC;
   var hasPotency=ocsThc||objTHC||nncpRange;
   var lc=m['Variant Lifecycle']||'';
@@ -554,11 +560,14 @@ function renderCard(p){
         +(nncpId?rowH('NNCP ID',nncpId,'',true):(nncpExempt?rowH('NNCP ID','N/A','',true):''))
         +(!nncp&&nncpExempt?'<div class="nd">N/A — not required</div>':'')+(missingNNCP?'<div class="nncp-missing"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r=".5" fill="currentColor"/></svg>NNCP record not found</div>':'')
       +'</div>'
-      +'<div class="ds"><div class="dl">Barcodes</div>'
+      +'<div class="ds"><div class="dl">Packaging</div>'
         +(eBC?rowH('Each (UPC)',eBC,'bc'):'')
         +(iBC?rowH('Inner Pack',iBC,'bc'):'')
         +(cBC?rowH('Case',cBC,'bc'):'')
         +(!hasBarcodes?'<div class="nd">No barcodes on file</div>':'')
+        +(caseUnit!=null?rowH('Units / Case',caseUnit,'',true):'')
+        +(innerUnit!=null?rowH('Units / Inner Pack',innerUnit,'',true):'')
+        +(caseUnit==null?'<div class="nd">No case configuration on file</div>':'')
       +'</div>'
       +'<div class="ds"><div class="dl">Potency</div>'
         +(ocsThc?rowH('OCS THC Range',ocsThc,'thc'):'')
@@ -577,6 +586,7 @@ var TCOLS=[
   {label:'Brand',key:'brand'},
   {label:'Category',key:'cat'},
   {label:'Size',key:'size'},
+  {label:'Units/Case',key:'ucase'},
   {label:'Each Barcode',key:'ebc'},
   {label:'Case Barcode',key:'cbc'},
   {label:'OCS THC %',key:'ocs_thc'},
@@ -596,6 +606,7 @@ function getVal(p,key){
     case 'brand': return m['Brand Name']||'';
     case 'cat': return m['Sub Category']||'';
     case 'size': return m['Size']||'';
+    case 'ucase': return (m['Case Unit']!=null)?m['Case Unit']:0;
     case 'ebc': return m['Each Barcode']||'';
     case 'cbc': return m['Case Barcode']||'';
     case 'ocs_thc': return (pot&&pot.OCS_Min_THC!=null)?pot.OCS_Min_THC:0;
@@ -643,6 +654,7 @@ function renderTable(filtered){
       +'<td><span class="tag tb" style="font-size:8px">'+(m['Brand Name']||'')+'</span></td>'
       +'<td><span class="tag tc" style="font-size:8px">'+(m['Sub Category']||'')+'</span></td>'
       +'<td class="tm">'+(m['Size']||'')+'</td>'
+      +'<td class="tm" style="color:var(--ink-2);font-weight:600">'+(m['Case Unit']!=null?m['Case Unit']:'—')+'</td>'
       +'<td><div class="tdr">'+(eBC?'<span class="tm" style="color:var(--lav)">'+eBC+'</span>'+cpBtn(eBC):'—')+'</div></td>'
       +'<td><div class="tdr">'+(cBC?'<span class="tm" style="color:var(--lav)">'+cBC+'</span>'+cpBtn(cBC):'—')+'</div></td>'
       +'<td class="tm" style="color:var(--teal-bright)">'+ocsThc+'</td>'
@@ -1021,6 +1033,5 @@ render();
 })();
 </script>
 
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"45b9278be2004c32a506ca9c8a4c33ca","r":1}' crossorigin="anonymous"></script>
 </body>
 </html>
